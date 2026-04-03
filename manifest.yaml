@@ -1,0 +1,19 @@
+name: jengo-system-public
+layer: system
+tier: public
+version: 1.0.0
+description: Shareable capabilities, public tools and skills
+
+permissions:
+  read: []
+  write: [self]
+  execute: [tools/*.ps1, skills/*.md]
+
+dependencies:
+  required: []
+  optional: []
+
+scope: |
+  Contains Jengo's public capabilities: shareable skills, open-source tools,
+  and reusable automation scripts. These are capabilities that benefit the
+  community and contain no sensitive operational details.
