@@ -1,0 +1,95 @@
+# Pattern: Evidence Chain Requirement for Task Completion
+# Weight: 3.0 (FOUNDATIONAL)
+#
+# Discovery: Catastrophic autonomous workflow violations (52 instances)
+# prevented by enforcing evidence verification
+
+pattern:
+  name: "Evidence Chain Requirement"
+  category: Quality Gate
+  weight: 3.0  # FOUNDATIONAL
+  status: ZERO_TOLERANCE
+
+principle: |
+  A task is NOT complete until there is VERIFIABLE EVIDENCE in version control.
+  Claims of completion without evidence are meaningless.
+
+  THE EVIDENCE IS THE WORK.
+
+evidence_chain:
+  required_links:
+    1: "Git commits exist (git log --grep=<task-id>)"
+    2: "Commits are on a feature branch (not develop/main directly)"
+    3: "PR was created linking commits to task"
+    4: "Comment was posted to task with PR link"
+    5: "PR state is appropriate (OPEN for review, MERGED for testing)"
+    6: "Files referenced in task actually exist in PR diff"
+
+verification_gates:
+  before_moving_to_review:
+    checks:
+      - "PR URL exists and is valid"
+      - "PR is OPEN or MERGED"
+      - "PR mentions task ID in body"
+      - "At least 1 commit in PR"
+      - "Comment with PR link posted to task (200 OK response)"
+
+    if_any_fail:
+      action: "REFUSE status change, keep in current status"
+      log: "Evidence chain broken at gate X"
+
+  before_moving_to_testing:
+    checks:
+      - "PR is MERGED (not just approved)"
+      - "Merge commit exists on develop/main"
+      - "Build passed on merged commit"
+
+    if_any_fail:
+      action: "REFUSE status change, keep in REVIEW"
+
+exception_scenarios:
+  no_code_tasks:
+    examples: ["Documentation update", "Config change", "Manual deployment"]
+    requirement: "Comment explaining what was done + how to verify"
+    still_required: "SOME evidence (screenshot, config file diff, verification command)"
+
+anti_patterns:
+  circular_evidence:
+    pattern: "Task comment claims work done, cites itself as evidence"
+    why_bad: "Circular reference proves nothing"
+    example: "Comment says 'I completed this task' with no external evidence"
+
+  status_without_evidence:
+    pattern: "Task moved to TESTING with zero commits/PRs"
+    why_bad: "Complete absence of work, yet status claims completion"
+    prevention: "Validate evidence chain BEFORE allowing status change"
+
+  wrong_pr_linked:
+    pattern: "PR exists but implements different feature"
+    why_bad: "Confuses code review, wastes reviewer time"
+    prevention: "Verify PR content matches task requirements"
+
+incident_history:
+  - date: "2026-03-28"
+    instances: 52
+    issue: "Tasks moved to REVIEW/TESTING with zero evidence"
+    root_cause: "Orchestration bypassed evidence validation gates"
+    impact: "Complete trust breakdown, month of false-positive completions"
+    resolution: "Mandatory evidence validation before ANY status change"
+
+implementation:
+  language: Any
+  pseudocode: |
+    function canMoveToReview(task) {
+      pr = findPRForTask(task.id)
+      if (!pr) return {allowed: false, reason: "No PR found"}
+      if (pr.state == "CLOSED") return {allowed: false, reason: "PR is closed"}
+
+      comment = findCommentWithPRLink(task.id, pr.url)
+      if (!comment) return {allowed: false, reason: "No comment linking PR"}
+
+      commits = pr.commits
+      if (commits.length == 0) return {allowed: false, reason: "PR has no commits"}
+
+      return {allowed: true}
+    }

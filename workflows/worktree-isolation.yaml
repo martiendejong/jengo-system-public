@@ -1,0 +1,67 @@
+# Pattern: Worktree Isolation for Parallel Development
+# Use Case: Multiple agents (or one agent handling multiple tasks) need isolated workspaces
+#
+# Problem: Editing files directly in a shared repo causes conflicts when multiple
+# agents/tasks are active. Branch switching disrupts work in progress.
+#
+# Solution: Allocate separate worktree directories per agent/task.
+
+pattern:
+  name: "Worktree Isolation"
+  category: Development Workflow
+  maturity: Production
+  weight: 2.0  # High value
+
+concept:
+  description: |
+    Git worktrees allow multiple working directories from the same repository.
+    Each worktree can be on a different branch without affecting others.
+
+    Benefits:
+    - No branch switching disruption
+    - Parallel work on multiple features
+    - Isolated dependencies (node_modules, build artifacts)
+    - Clean separation of concerns
+
+implementation:
+  allocation_pool:
+    description: "Maintain a pool of pre-allocated worktree 'seats'"
+    structure:
+      - seat_id: "agent-001"
+        path: "/path/to/worker-agents/agent-001"
+        status: "FREE | BUSY | STALE"
+        current_branch: null
+        last_activity: timestamp
+
+  allocation_protocol:
+    steps:
+      1: "Check pool for FREE seat"
+      2: "If none FREE, provision new seat with next sequential ID"
+      3: "Mark seat BUSY, record branch and task"
+      4: "Create git worktree: git worktree add <seat-path> -b <branch>"
+      5: "Work in isolated directory"
+      6: "On completion: commit, push, create PR"
+      7: "Remove worktree: git worktree remove <seat-path>"
+      8: "Mark seat FREE"
+
+  conflict_detection:
+    description: "Prevent two agents from working on same branch"
+    rule: "Before allocation, check if any BUSY seat is already on target branch"
+    action_if_conflict: "Refuse allocation, notify about conflict"
+
+  stale_detection:
+    description: "Clean up abandoned worktrees"
+    rule: "If seat is BUSY for >2 hours with no file changes, mark STALE"
+    recovery: "Review uncommitted changes, commit or discard, release seat"
+
+anti_patterns:
+  - pattern: "Editing base repo directly"
+    why_bad: "Conflicts with other agents, forces branch switching"
+  - pattern: "git stash for task switching"
+    why_bad: "Error-prone, loses context, stash conflicts"
+  - pattern: "Multiple clones of same repo"
+    why_bad: "Wastes disk space, sync issues, ref duplication"
+
+usage:
+  trigger: "Starting any feature development, bug fix, or isolated task"
+  teams: "Essential for multi-agent systems, valuable for single-agent multi-tasking"
