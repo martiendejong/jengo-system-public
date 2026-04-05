@@ -112,7 +112,6 @@ artrevisionist.com/
 │   ├── /the-marcello-myth/            # Main article
 │   ├── /claude-valsuani-true-story/   # Biography
 │   ├── /primary-sources/              # Evidence gallery
-│   ├── /fromanger-analysis/           # Critical analysis
 │   ├── /timeline/                     # Interactive timeline
 │   ├── /expert-responses/             # Expert feedback
 │   └── /resources/                    # Downloads
