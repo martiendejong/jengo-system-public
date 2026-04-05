@@ -82,7 +82,6 @@ C:\artrevisionist\
     │── EVIDENCE_INDEX.md              # 82 primary documents cataloged (source inventory)
     │── DOCUMENT_ANALYSIS_REPORT.md    # Forensic analysis
     │── PUBLICATION_STRATEGY.md        # Complete publication plan
-    │── FROMANGER_DOSSIER.md           # Critical analysis
     │── degas-controversy\
     │── foundry-marks\
     │── history\
@@ -395,15 +394,13 @@ convert "WhatsApp Image 2026-01-23 at 17.02.04.jpeg" -quality 85 test_output.jpe
 ### 3 Years
 - ✅ "Marcello" eliminated from major art databases
 - ✅ Accepted as art historical fact
-- ✅ Fromanger credibility questioned publicly
 
 ---
 
 ## CONTACT & CREDENTIALS
 
 **WordPress Site:** artrevisionist.com
-**Admin User:** wreckingball
-**Admin Pass:** Th1s1sSp4rt4! (from CLAUDE.md)
+**Admin Credentials:** [FROM VAULT: vault.ps1 -Action get -Service artrevisionist]
 **FTP Access:** [TO BE CONFIGURED]
 
 ---
