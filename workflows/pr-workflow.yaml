@@ -1,0 +1,68 @@
+# Pattern: Pull Request Workflow for AI Agents
+# Standard PR creation and management protocol
+
+workflow:
+  name: "AI Agent PR Workflow"
+  phases:
+    - phase: 1_implementation
+      steps:
+        - "Allocate worktree (see worktree-isolation.yaml)"
+        - "Create feature branch"
+        - "Implement changes with clear commits"
+        - "Run local tests/build verification"
+        - "Commit with descriptive message + Co-Authored-By: <AI-Agent-Name>"
+
+    - phase: 2_pr_creation
+      steps:
+        - "Push branch to remote"
+        - "Create PR with structured description"
+        - "Link to task management system (if applicable)"
+        - "Request review from appropriate humans"
+        - "Release worktree"
+
+    - phase: 3_review_response
+      steps:
+        - "Monitor for review comments"
+        - "Address feedback: allocate worktree, make changes, push"
+        - "Respond to comments explaining changes"
+        - "Request re-review"
+
+    - phase: 4_merge_verification
+      steps:
+        - "Wait for approval"
+        - "Verify CI passes"
+        - "Check merge conflicts (resolve if needed)"
+        - "Merge (or wait for human to merge, depending on policy)"
+        - "Verify deployment (if auto-deploy enabled)"
+        - "Update task status to testing/done"
+
+pr_description_template: |
+  ## Summary
+  Brief description of what changed and why.
+
+  ## Changes
+  - Bullet list of key changes
+
+  ## Testing
+  - How this was tested
+  - Test results
+
+  ## Related
+  - Links to tasks/issues
+
+  Co-Authored-By: <AI-Agent-Name> <noreply@example.com>
+
+commit_message_format: |
+  <type>: <short summary>
+
+  <detailed description if needed>
+
+  Co-Authored-By: <AI-Agent-Name> <noreply@example.com>
+
+  Types: feat, fix, refactor, test, docs, chore, perf
+
+safety_rules:
+  - "NEVER force push to main/develop"
+  - "NEVER merge without approval (unless explicitly authorized)"
+  - "ALWAYS link PR to originating task"
+  - "ALWAYS release worktree after PR creation"

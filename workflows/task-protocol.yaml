@@ -1,0 +1,91 @@
+# Pattern: Complete Task Execution Protocol
+# Five-phase checklist for task completion (BACKLOG → REVIEW)
+
+protocol:
+  name: "Complete Task Execution Protocol"
+  phases:
+    1_read_and_understand:
+      actions:
+        - "Read full task description (title, description, acceptance criteria)"
+        - "Read ALL comments in chronological order (not just latest)"
+        - "Note: what is being asked, what was already done, what was flagged"
+
+    2_determine_task_state:
+      scenarios:
+        scenario_a_fresh_todo:
+          indicators: ["No existing branch", "No PR", "No code changes"]
+          action: "Start from scratch: allocate worktree, implement, create PR"
+
+        scenario_b_feedback_rework:
+          indicators: ["Prior work exists (merged or open PR)", "Comments contain reviewer notes/bugs/change requests"]
+          action: "Implement EVERY piece of feedback before creating new PR"
+
+        scenario_c_no_pr_exception:
+          indicators: ["Task handled without code (config, deployment, content, infra)"]
+          action: "Still post comment explaining what was done and why no PR"
+
+    3_implement:
+      scenario_a:
+        steps:
+          - "Run pre-implementation verification (see pre-implementation-verification.yaml)"
+          - "If unclear: post questions, move to 'needs input', STOP"
+          - "Allocate worktree"
+          - "Implement feature/fix"
+          - "Run tests/build locally"
+          - "Commit with clear message referencing task"
+
+      scenario_b:
+        steps:
+          - "Re-read every comment carefully, extract each feedback point"
+          - "Create checklist of all feedback items"
+          - "For each item: implement fix, verify it resolves the comment"
+          - "If comment unclear: post reply asking for clarification"
+          - "Commit with message: 'Address review feedback: [summary]'"
+
+      scenario_c:
+        steps:
+          - "Do the non-code work (deploy, config, etc.)"
+          - "Verify the result"
+          - "Prepare evidence (screenshot, config diff, verification command)"
+
+    4_create_or_update_pr:
+      for_scenarios_a_and_b:
+        steps:
+          - "Push branch"
+          - "Create PR with: title matching task, body with changes/testing/task link"
+          - "For scenario B: explicitly list feedback items resolved"
+          - "Verify PR created (gh pr view <url>)"
+          - "Post task comment with PR URL + summary (2-5 bullets)"
+          - "Verify comment posted (200 OK response)"
+
+      for_scenario_c:
+        steps:
+          - "Post comment with: what was done, how to verify, evidence"
+          - "No PR needed, but comment is MANDATORY"
+
+    5_move_to_review:
+      gate_checks:
+        - "Task description fully read ✓"
+        - "All comments read and addressed ✓"
+        - "Code implemented in worktree (A/B) OR action completed (C) ✓"
+        - "PR exists and open (A/B) OR explanation comment posted (C) ✓"
+        - "Task comment posted with PR link or action summary ✓"
+        - "Comment confirmed posted (200 OK) ✓"
+
+      if_any_unchecked: "DO NOT change status"
+
+      if_all_checked:
+        action: "Update task status to 'review'"
+
+status_flow:
+  - "backlog → (refine) → refined/needs input"
+  - "refined/todo → (implement + PR + comment) → review"
+  - "feedback → (read comments + implement fixes + PR + comment) → review"
+  - "review → (after merge) → testing"
+  - "testing → (user/QA only) → done"
+
+zero_tolerance_rules:
+  - "NEVER move to review without PR (scenarios A/B) or comment (scenario C)"
+  - "NEVER move to testing without MERGED PR"
+  - "NEVER move to done (only user/QA can do this)"
+  - "NEVER skip reading ALL comments (not just latest)"

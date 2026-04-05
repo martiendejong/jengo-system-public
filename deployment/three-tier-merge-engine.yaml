@@ -1,0 +1,84 @@
+# Pattern: Three-Tier Knowledge Merge Strategy
+# How to organize knowledge across Machine, Private, and Public tiers
+
+architecture:
+  name: "Three-Tier Merge Engine"
+  tiers:
+    machine:
+      description: "Machine-specific config (local paths, IPs, ports)"
+      examples: ["Local service ports", "Server IPs", "Drive letters", "Tool paths"]
+      persistence: "This machine only"
+      promotion: "NEVER (tied to this machine)"
+
+    private:
+      description: "Personal knowledge syncing across machines"
+      examples: ["People", "Projects", "Credentials refs", "Personal patterns"]
+      persistence: "Syncs across user's machines"
+      promotion: "To public ONLY with anonymization"
+
+    public:
+      description: "Shareable patterns for any agent"
+      examples: ["Templates", "Workflows", "Quality gates", "Generalizable patterns"]
+      persistence: "Public GitHub repos"
+      promotion: "Contribute back upstream"
+
+loading_strategy:
+  on_demand:
+    description: "Don't load all repos at startup, load based on task context"
+    triggers:
+      task_with_clickup_id: "Load knowledge-private (memory), world-private (projects)"
+      code_work: "Load registry-machine (worktrees, tools)"
+      new_person_mentioned: "Load world-private (people)"
+      deployment: "Load world-machine (infrastructure)"
+
+merge_semantics:
+  rule: "First match wins (no file-level merging)"
+  order:
+    1: "Check machine repo (highest priority - local overrides)"
+    2: "Check private repo (personal knowledge)"
+    3: "Check public repo (shared base)"
+
+  exception:
+    condition: "YAML file with frontmatter `merge: deep`"
+    behavior: "Field-level merge instead of whole-file override"
+
+discovery_classification:
+  triggers_and_destinations:
+    - trigger: "Error correction received"
+      classification: "system-update"
+      destination: "system-private"
+      approval: "Automatic"
+
+    - trigger: "New person/entity learned"
+      classification: "world-update"
+      destination: "world-private"
+      approval: "Automatic"
+
+    - trigger: "Pattern recognized (≥3 instances)"
+      classification: "knowledge-update"
+      destination: "knowledge-private"
+      approval: "Automatic"
+
+    - trigger: "Tool/service discovered"
+      classification: "registry-update"
+      destination: "registry-machine"
+      approval: "Automatic"
+
+    - trigger: "Generalizable pattern (not personal)"
+      classification: "public-promotion"
+      destination: "{domain}-public via PR"
+      approval: "User approval required"
+
+promotion_workflow:
+  machine_to_private:
+    trigger: "Knowledge useful across machines"
+    threshold: "Confidence ≥ 0.7"
+    commit_format: "[auto-promote] <description> (from machine)"
+
+  private_to_public:
+    trigger: "Pattern is not personal, other agents could benefit"
+    process:
+      1: "Agent asks: 'I discovered [X]. Should I create a PR to promote it to public?'"
+      2: "If approved: anonymize content (remove names, IPs, credentials)"
+      3: "Create PR on public repo: gh pr create"
+      4: "User reviews and merges if acceptable"
